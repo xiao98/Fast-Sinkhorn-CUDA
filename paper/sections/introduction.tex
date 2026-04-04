@@ -1,0 +1,30 @@
+% ============================================================================
+% Section 1: Introduction
+% ============================================================================
+
+\section{Introduction}
+\label{sec:introduction}
+
+Optimal transport (OT) provides a mathematically principled framework for comparing probability distributions by computing the minimum-cost coupling between them~\citep{villani2003topics, villani2009optimal}. In the discrete setting, the Kantorovich formulation reduces to a linear program over coupling matrices, with applications spanning generative modeling~\citep{arjovsky2017wasserstein}, domain adaptation~\citep{courty2017optimal}, document similarity~\citep{kusner2015word}, and geometric processing~\citep{solomon2015convolutional}.
+
+The computational bottleneck of exact OT solvers---scaling as $O(n^3 \log n)$ via the network simplex algorithm---was dramatically alleviated by \citet{cuturi2013sinkhorn}, who introduced entropic regularization and showed that the resulting problem can be solved via Sinkhorn's matrix scaling algorithm in near-linear time per iteration. This breakthrough has led to widespread adoption of the Sinkhorn algorithm in machine learning pipelines~\citep{peyre2019computational}.
+
+Despite its popularity, practical deployment of the Sinkhorn algorithm on modern hardware faces two key challenges:
+
+\paragraph{Numerical instability.} The standard-domain Sinkhorn algorithm computes the Gibbs kernel $K_{ij} = \exp(-C_{ij}/\varepsilon)$, which causes catastrophic overflow or underflow in floating-point arithmetic when the regularization parameter $\varepsilon$ is small---precisely the regime needed for accurate OT approximation. Log-domain stabilization~\citep{schmitzer2019stabilized} addresses this but has not been widely adopted in GPU-optimized implementations.
+
+\paragraph{Framework overhead.} Existing GPU implementations rely on deep learning frameworks (PyTorch, JAX) or specialized libraries (KeOps/GeomLoss~\citep{feydy2019interpolating, charlier2021kernel}), which introduce significant overhead from automatic differentiation graphs, memory allocators, and Python-to-GPU dispatch. For applications that require only the forward OT computation---such as point cloud registration, color transfer, or batch distance computation---this overhead is unnecessary.
+
+\subsection{Contributions}
+
+We present \textsc{FastSinkhorn}, a lightweight CUDA C++ library for entropic regularized optimal transport. Our contributions are:
+
+\begin{enumerate}
+    \item \textbf{Numerically stable GPU solver.} A log-domain Sinkhorn implementation with a two-pass LogSumExp reduction that operates entirely in log-space, handling regularization parameters as small as $\varepsilon = 10^{-4}$ without numerical failure.
+
+    \item \textbf{Warp-level GPU optimizations.} We exploit CUDA warp shuffle instructions (\texttt{\_\_shfl\_down\_sync}) for intra-warp reductions, combined with shared memory for cross-warp communication. This hierarchical reduction eliminates shared-memory bank conflicts within warps and reduces synchronization overhead by $1.93\times$ compared to pure shared-memory reductions.
+
+    \item \textbf{Comprehensive evaluation.} We provide extensive benchmarks against POT~\citep{flamary2021pot}, GeomLoss~\citep{feydy2019interpolating}, and PyTorch-based solvers, along with ablation studies quantifying the contribution of each optimization, numerical stability analysis, and real-world applications in image color transfer and point cloud matching.
+\end{enumerate}
+
+Our solver is self-contained (no dependencies beyond the CUDA runtime), supports both pre-computed cost matrices and Euclidean point cloud inputs, and is publicly available under the MIT license.

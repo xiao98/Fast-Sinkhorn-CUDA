@@ -1,0 +1,12 @@
+\begin{tabular}{l r r}
+\toprule
+\textbf{Configuration} & \textbf{Time (ms)} & \textbf{Slowdown} \\
+\midrule
+Full system (ours) & 14.8 & 1.00$\times$ \\
+Shared-mem only (no warp shuffle) & 28.5 & 1.93$\times$ \\
+Standard domain (no log-LSE) & 16.9 & 1.14$\times$ \\
+Block size = 64 & 21.1 & 1.42$\times$ \\
+Block size = 512 & 16.8 & 1.14$\times$ \\
+Check every iter & 24.8 & 1.68$\times$ \\
+\bottomrule
+\end{tabular}

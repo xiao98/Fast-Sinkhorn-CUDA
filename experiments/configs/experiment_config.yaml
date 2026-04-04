@@ -1,0 +1,54 @@
+# ============================================================================
+# Central configuration for all experiments
+# ============================================================================
+
+# Shared parameters
+random_seed: 42
+
+# Problem setup
+distributions:
+  mu_center: 0.3
+  mu_sigma: 0.08
+  nu_center: 0.7
+  nu_sigma: 0.08
+
+# Solver defaults
+solver:
+  max_iterations: 2000
+  convergence_threshold: 1.0e-6
+  convergence_check_interval: 10
+
+# Timing
+timing:
+  warmup_runs: 3
+  timed_runs: 10
+
+# Baseline comparisons
+baselines:
+  sizes: [256, 512, 1024, 2048, 4096, 8192]
+  epsilons: [0.1, 0.01, 0.001]
+
+# Scaling experiment
+scaling:
+  sizes: [64, 128, 256, 512, 1024, 2048, 4096, 8192, 12288, 16384]
+  epsilon: 0.01
+
+# Ablation study
+ablation:
+  n: 2048
+  epsilon: 0.01
+  block_sizes: [64, 128, 256, 512]
+  check_intervals: [1, 5, 10, 20, 50, 100]
+
+# Stability experiment
+stability:
+  n: 512
+  epsilons: [1.0, 0.5, 0.1, 0.05, 0.01, 0.005, 0.001, 0.0005, 0.0001]
+  max_costs: [1, 10, 100, 1000]
+
+# Convergence analysis
+convergence:
+  sizes: [256, 1024, 4096]
+  epsilons: [0.1, 0.01, 0.001]
+  max_iterations: 5000
+  check_interval: 10

@@ -1,0 +1,90 @@
+% ============================================================================
+% Fast Log-Domain Sinkhorn on GPU — NeurIPS 2025
+% ============================================================================
+% To compile:
+%   pdflatex main.tex && bibtex main && pdflatex main.tex && pdflatex main.tex
+%
+% NOTE: Download neurips_2025.sty from:
+%   https://neurips.cc/Conferences/2025/PaperInformation/StyleFiles
+% and place it in this directory before compiling.
+% ============================================================================
+
+\documentclass{article}
+
+% --- NeurIPS style ---
+\usepackage[preprint]{neurips_2025}
+% Use [final] for camera-ready version; [preprint] for arXiv
+
+% --- Packages ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{xcolor}
+\usepackage{microtype}
+\usepackage{bm}
+
+% --- Math commands ---
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\KL}{\mathrm{KL}}
+\newcommand{\LSE}{\mathrm{LSE}}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\bpi}{\bm{\pi}}
+\newcommand{\balpha}{\bm{\alpha}}
+\newcommand{\bbeta}{\bm{\beta}}
+\newcommand{\bmu}{\bm{\mu}}
+\newcommand{\bnu}{\bm{\nu}}
+\DeclareMathOperator*{\argmin}{argmin}
+\DeclareMathOperator{\diag}{diag}
+
+% --- Theorem environments ---
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}{Proposition}
+\newtheorem{definition}{Definition}
+\newtheorem{remark}{Remark}
+
+% --- Placeholder macro for experimental results ---
+\newcommand{\placeholder}[1]{{\color{red}\textbf{[#1]}}}
+
+% ============================================================================
+\title{Fast Log-Domain Sinkhorn Optimal Transport\\with Warp-Level GPU Reductions}
+
+\author{
+  Hao Xiao \\
+  ATLAS AI Lab \\
+  \texttt{xiaohao@atlasthinktank.com}
+}
+
+\begin{document}
+
+\maketitle
+
+\input{sections/abstract}
+\input{sections/introduction}
+\input{sections/related_work}
+\input{sections/background}
+\input{sections/method}
+\input{sections/experiments}
+\input{sections/conclusion}
+
+% ============================================================================
+% References
+% ============================================================================
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+% ============================================================================
+% Appendix
+% ============================================================================
+\newpage
+\appendix
+\input{sections/appendix}
+
+\end{document}

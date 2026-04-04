@@ -1,0 +1,7 @@
+% ============================================================================
+% Abstract
+% ============================================================================
+
+\begin{abstract}
+Entropic regularized optimal transport (OT) via the Sinkhorn algorithm has become a fundamental tool in machine learning, yet existing implementations either suffer from numerical instability for small regularization parameters or incur significant overhead from deep learning frameworks. We present \textsc{FastSinkhorn}, a lightweight, native CUDA implementation of the log-domain Sinkhorn algorithm that combines warp-level shuffle reductions with shared-memory tiling to achieve high GPU utilization without sacrificing numerical stability. Our solver operates entirely in the log-domain, enabling robust computation for regularization parameters as small as $\varepsilon = 10^{-4}$ where standard-domain methods fail. On dense OT problems with $n = m = 8192$, our implementation achieves $12\times$ speedup over the widely-used POT library and $5.9\times$ speedup over GPU-accelerated PyTorch baselines, while consuming only 256\,MB of GPU memory. We validate our solver on image color transfer, 3D point cloud matching, and convergence analysis, demonstrating that native CUDA kernels with careful numerical treatment provide a practical and efficient foundation for large-scale optimal transport computation.
+\end{abstract}

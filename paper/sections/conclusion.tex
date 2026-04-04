@@ -1,0 +1,17 @@
+% ============================================================================
+% Section 6: Conclusion
+% ============================================================================
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+We presented \textsc{FastSinkhorn}, a native CUDA implementation of the log-domain Sinkhorn algorithm for entropic regularized optimal transport. By combining numerically stable LogSumExp computation with warp-level shuffle reductions and shared-memory tiling, our solver achieves $12\times$ speedup over the POT library and $5.9\times$ over PyTorch-based GPU solvers on dense OT problems up to $n = m = 8192$. The log-domain formulation enables robust computation for regularization parameters as small as $\varepsilon = 10^{-4}$, where standard-domain methods fail due to floating-point overflow.
+
+\paragraph{Limitations.}
+Our implementation has several limitations. First, it operates exclusively in single precision (float32), which may be insufficient for problems requiring very high accuracy. Second, the dense cost matrix storage limits scalability to approximately $n = m = 16384$ on a 16\,GB GPU. Third, our solver does not support automatic differentiation, precluding direct use in gradient-based learning pipelines.
+
+\paragraph{Future work.}
+Several extensions are promising: (1)~mixed-precision (fp16/bf16) computation for the Gibbs kernel, with fp32 accumulation for the LogSumExp; (2)~sparse or low-rank cost matrix representations to scale beyond $n = 16384$; (3)~a \texttt{pybind11} wrapper for seamless Python integration; (4)~integration with multiscale strategies~\citep{schmitzer2019stabilized} for further acceleration.
+
+\paragraph{Reproducibility.}
+All code, experiment scripts, and plotting utilities are publicly available at \url{https://github.com/xiao98/Fast-Sinkhorn-CUDA} under the MIT license.

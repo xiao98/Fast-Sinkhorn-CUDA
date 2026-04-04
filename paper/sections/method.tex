@@ -1,0 +1,95 @@
+% ============================================================================
+% Section 4: Method
+% ============================================================================
+
+\section{Method: GPU-Optimized Log-Domain Sinkhorn}
+\label{sec:method}
+
+\subsection{Log-Domain Stabilization}
+\label{sec:log_domain}
+
+The standard Sinkhorn algorithm (Section~\ref{sec:background}) computes the Gibbs kernel $K_{ij} = \exp(-C_{ij}/\eps)$ explicitly. For typical cost matrices with $C_{ij} \in [0, 10]$ and $\eps = 0.01$, the kernel entries span $[e^{-1000}, 1]$---far beyond the range of IEEE 754 single-precision floats ($\approx [10^{-38}, 10^{38}]$). This causes catastrophic underflow.
+
+We instead work entirely in the log-domain. The key operation is the \emph{numerically stable LogSumExp}:
+\begin{equation}
+    \label{eq:logsumexp}
+    \LSE(x_1, \ldots, x_m) = \max_j x_j + \log \sum_{j=1}^m \exp(x_j - \max_j x_j).
+\end{equation}
+By subtracting the maximum before exponentiation, the largest exponential becomes $e^0 = 1$ (no overflow) and all others satisfy $e^{x_j - M} \leq 1$ (no overflow). The sum is at least 1, so the logarithm is non-negative (no underflow issue).
+
+The Sinkhorn dual updates (Eqs.~\ref{eq:sinkhorn_alpha}--\ref{eq:sinkhorn_beta}) become:
+\begin{align}
+    \label{eq:log_alpha}
+    \alpha_i &= -\eps \cdot \LSE_j\!\left(\frac{\beta_j - C_{ij}}{\eps} + \log \nu_j\right), \\
+    \label{eq:log_beta}
+    \beta_j  &= -\eps \cdot \LSE_i\!\left(\frac{\alpha_i - C_{ij}}{\eps} + \log \mu_i\right).
+\end{align}
+
+\subsection{CUDA Parallelization Strategy}
+\label{sec:cuda_strategy}
+
+Each dual update requires computing one LogSumExp per row (for $\balpha$) or per column (for $\bbeta$). We assign \textbf{one CUDA thread block per row/column}, with threads within the block cooperating on the reduction. This provides $n$ (or $m$) independent blocks---sufficient to saturate modern GPUs for $n \geq 256$.
+
+Algorithm~\ref{alg:sinkhorn} presents the complete procedure.
+
+\begin{algorithm}[t]
+\caption{Log-Domain Sinkhorn with CUDA Parallelization}
+\label{alg:sinkhorn}
+\begin{algorithmic}[1]
+\REQUIRE Cost matrix $C \in \R^{n \times m}$, distributions $\bmu \in \Sigma_n$, $\bnu \in \Sigma_m$, regularization $\eps > 0$, tolerance $\tau$, max iterations $K$, check interval $c$
+\ENSURE Transport cost $\langle C, \bpi^\eps \rangle$, dual potentials $(\balpha, \bbeta)$
+\STATE Allocate GPU: $\mathbf{d\_C}[n \times m]$, $\mathbf{d\_\alpha}[n] \gets \mathbf{0}$, $\mathbf{d\_\beta}[m] \gets \mathbf{0}$
+\STATE Precompute: $\mathbf{d\_log\_\mu}[i] \gets \log \mu_i$, $\mathbf{d\_log\_\nu}[j] \gets \log \nu_j$
+\FOR{$k = 1, 2, \ldots, K$}
+    \STATE \texttt{updateAlphaKernel}$\langle\langle\langle n, B \rangle\rangle\rangle$: \COMMENT{one block per row}
+    \STATE \quad $\alpha_i \gets -\eps \cdot \mathrm{BlockLSE}_{j}\!\left(\frac{\beta_j - C_{ij}}{\eps} + \log \nu_j\right)$ for each block $i$
+    \STATE \texttt{updateBetaKernel}$\langle\langle\langle m, B \rangle\rangle\rangle$: \COMMENT{one block per column}
+    \STATE \quad $\beta_j \gets -\eps \cdot \mathrm{BlockLSE}_{i}\!\left(\frac{\alpha_i - C_{ij}}{\eps} + \log \mu_i\right)$ for each block $j$
+    \IF{$k \bmod c = 0$}
+        \STATE Compute marginal error: $\mathrm{err} = \sum_i |r_i - \mu_i|$ \COMMENT{amortize sync}
+        \IF{$\mathrm{err} < \tau$}
+            \STATE \textbf{break} (converged)
+        \ENDIF
+    \ENDIF
+\ENDFOR
+\STATE Compute transport cost: $\langle C, \bpi^\eps \rangle = \sum_{i,j} C_{ij} \exp\!\left(\frac{\alpha_i + \beta_j - C_{ij}}{\eps} + \log \mu_i + \log \nu_j\right)$
+\RETURN transport cost, $(\balpha, \bbeta)$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Warp-Level Reductions}
+\label{sec:warp_reductions}
+
+The LogSumExp computation requires two reductions per row/column: a max-reduction (Pass~1) and a sum-reduction (Pass~2). We implement these using a \emph{hierarchical reduction} scheme:
+
+\paragraph{Intra-warp reduction.} Within each warp (32 threads), we use the \texttt{\_\_shfl\_down\_sync} instruction to perform butterfly reductions in $\log_2(32) = 5$ steps, without any shared memory access or synchronization barriers. For the max-reduction:
+\begin{equation}
+    \texttt{val} \gets \max(\texttt{val},\ \texttt{\_\_shfl\_down\_sync}(\texttt{0xFFFFFFFF}, \texttt{val}, \texttt{offset}))
+\end{equation}
+for offsets $16, 8, 4, 2, 1$. The sum-reduction replaces $\max$ with $+$.
+
+\paragraph{Cross-warp reduction.} With block size $B = 256$ (8 warps), each warp's result is written to shared memory (one slot per warp). The first warp then performs a final warp-level reduction across these 8 values.
+
+This two-level design eliminates shared memory bank conflicts for intra-warp communication, avoids \texttt{\_\_syncthreads()} barriers within warps, and requires only $32$ shared memory slots regardless of block size.
+
+\subsection{Memory Layout and Access Patterns}
+\label{sec:memory}
+
+The cost matrix $C$ dominates memory usage at $O(nm)$ floats, while dual potentials require only $O(n + m)$---negligible in comparison. For $n = m = 8192$, the cost matrix occupies 256\,MB and the potentials add $\sim$64\,KB.
+
+\paragraph{Coalesced access.} The cost matrix is stored in row-major order. In the $\balpha$-update kernel, block $i$ reads row $i$ of $C$ sequentially---threads within a warp access consecutive addresses, achieving coalesced global memory loads. The $\bbeta$-update kernel accesses column $j$ with stride $m$, which is less favorable; however, the L2 cache (typically 4--6\,MB on modern GPUs) mitigates this when the cost matrix fits in cache.
+
+\paragraph{Precomputed log-weights.} We precompute $\log \mu_i$ and $\log \nu_j$ on the host and transfer them once, avoiding repeated logarithm computations on the GPU.
+
+\subsection{Convergence Monitoring}
+\label{sec:convergence}
+
+The marginal error $\mathrm{err} = \sum_i |r_i - \mu_i|$, where $r_i = \sum_j \pi^\eps_{ij}$ is the row marginal, requires a GPU-to-CPU data transfer for the scalar result. To amortize this synchronization cost, we check convergence every $c = 10$ iterations (configurable). The row marginal is computed in log-domain:
+\begin{equation}
+    \log r_i = \log \mu_i + \LSE_j\!\left(\frac{\alpha_i + \beta_j - C_{ij}}{\eps} + \log \nu_j\right),
+\end{equation}
+which reuses the same LogSumExp kernel structure as the dual updates.
+
+\subsection{Complexity Analysis}
+
+Each Sinkhorn iteration performs two LogSumExp reductions over the $n \times m$ cost matrix, giving $O(nm)$ work per iteration. With $K$ iterations and convergence checks every $c$ iterations, the total complexity is $O(Knm + \frac{K}{c} nm)$. Since $c$ is a small constant, this simplifies to $O(Knm)$. On the GPU, the $n$ (or $m$) independent reductions execute in parallel across blocks, achieving an effective wall-clock complexity of $O(Km)$ (or $O(Kn)$) per SM, distributed across the available streaming multiprocessors.

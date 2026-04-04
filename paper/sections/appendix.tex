@@ -1,0 +1,162 @@
+% ============================================================================
+% Appendix
+% ============================================================================
+
+\section{Mathematical Derivation}
+\label{app:derivation}
+
+We provide a complete derivation from the Kantorovich problem to the GPU-optimized log-domain Sinkhorn algorithm.
+
+\subsection{From KKT Conditions to Sinkhorn Updates}
+
+The Lagrangian of the regularized problem~\eqref{eq:regularized_ot} is:
+\begin{equation}
+    \mathcal{L}(\bpi, \balpha, \bbeta) = \langle C, \bpi \rangle + \eps \, \KL(\bpi \| \bmu \otimes \bnu) - \langle \balpha, \bpi \mathbf{1}_m - \bmu \rangle - \langle \bbeta, \bpi^\top \mathbf{1}_n - \bnu \rangle.
+\end{equation}
+
+Setting $\frac{\partial \mathcal{L}}{\partial \pi_{ij}} = 0$:
+\begin{equation}
+    C_{ij} + \eps \log \frac{\pi_{ij}}{\mu_i \nu_j} - \alpha_i - \beta_j = 0 \quad \Longrightarrow \quad \pi_{ij}^\eps = \mu_i \nu_j \exp\!\left(\frac{\alpha_i + \beta_j - C_{ij}}{\eps}\right).
+\end{equation}
+
+Substituting into the row marginal constraint $\sum_j \pi_{ij}^\eps = \mu_i$:
+\begin{align}
+    \sum_j \mu_i \nu_j \exp\!\left(\frac{\alpha_i + \beta_j - C_{ij}}{\eps}\right) &= \mu_i \\
+    \sum_j \nu_j \exp\!\left(\frac{\beta_j - C_{ij}}{\eps}\right) &= \exp\!\left(\frac{-\alpha_i}{\eps}\right) \\
+    \alpha_i &= -\eps \log \sum_j \nu_j \exp\!\left(\frac{\beta_j - C_{ij}}{\eps}\right).
+\end{align}
+
+The column constraint yields the analogous update for $\beta_j$.
+
+\subsection{Convergence Rate}
+
+\begin{proof}[Proof sketch of Theorem~\ref{thm:convergence}]
+Define the operator $T: (\balpha, \bbeta) \mapsto (\balpha', \bbeta')$ by the Sinkhorn updates. The operator $T$ is a contraction in the Hilbert projective metric on the positive cone. The contraction rate is determined by the Birkhoff contraction coefficient:
+\begin{equation}
+    \lambda = \tanh\!\left(\frac{R}{4\eps}\right)^2 \leq e^{-2R/\eps},
+\end{equation}
+where $R = \max_{i,j} C_{ij} - \min_{i,j} C_{ij}$. This follows from classical results on positive matrix scaling~\citep{franklin1989scaling}.
+\end{proof}
+
+\subsection{LogSumExp Numerical Analysis}
+
+The standard computation $\log \sum_j \exp(x_j)$ fails when $\max_j x_j > 88$ (overflow of $\exp$ in float32) or when $\max_j x_j < -88$ and all terms underflow to zero (yielding $\log(0) = -\infty$). In our setting, $x_j = (\beta_j - C_{ij})/\eps + \log \nu_j$, and for $\eps = 0.01$ with $C_{ij} \in [0, 1]$, we have $x_j \in [-100/\eps, 0] \approx [-10^4, 0]$---clearly problematic.
+
+The stabilized version $M + \log \sum_j \exp(x_j - M)$ with $M = \max_j x_j$ ensures:
+\begin{itemize}
+    \item The largest exponent is $e^0 = 1$ (no overflow).
+    \item All exponents satisfy $e^{x_j - M} \in (0, 1]$ (no overflow).
+    \item The sum is at least 1 (from the $j^*$ achieving the max), so $\log(\cdot) \geq 0$ (stable).
+\end{itemize}
+
+\section{Extended Benchmark Results}
+\label{app:benchmarks}
+
+\begin{table}[h]
+\centering
+\caption{Extended benchmark results across all tested configurations.}
+\label{tab:extended_benchmarks}
+\vspace{0.5em}
+\small
+\begin{tabular}{r r r r r r}
+\toprule
+$n$ & $\varepsilon$ & Time (ms) & Iterations & Transport cost & Converged \\
+\midrule
+256 & 0.1 & 0.15 & 31 & 0.0413 & \checkmark \\
+256 & 0.01 & 0.32 & 97 & 0.0395 & \checkmark \\
+256 & 0.001 & 0.65 & 340 & 0.0391 & \checkmark \\
+512 & 0.1 & 0.64 & 30 & 0.0391 & \checkmark \\
+512 & 0.01 & 1.26 & 80 & 0.0366 & \checkmark \\
+512 & 0.001 & 2.41 & 284 & 0.0406 & \checkmark \\
+1024 & 0.1 & 2.46 & 27 & 0.0429 & \checkmark \\
+1024 & 0.01 & 5.09 & 100 & 0.0372 & \checkmark \\
+1024 & 0.001 & 9.99 & 319 & 0.0377 & \checkmark \\
+2048 & 0.1 & 10.88 & 29 & 0.0394 & \checkmark \\
+2048 & 0.01 & 20.66 & 118 & 0.0400 & \checkmark \\
+2048 & 0.001 & 40.26 & 342 & 0.0376 & \checkmark \\
+4096 & 0.1 & 44.68 & 25 & 0.0373 & \checkmark \\
+4096 & 0.01 & 89.09 & 107 & 0.0403 & \checkmark \\
+4096 & 0.001 & 175.00 & 306 & 0.0370 & \checkmark \\
+8192 & 0.1 & 176.51 & 30 & 0.0421 & \checkmark \\
+8192 & 0.01 & 371.60 & 82 & 0.0406 & \checkmark \\
+8192 & 0.001 & 714.88 & 294 & 0.0412 & \checkmark \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{GPU Specifications}
+\label{app:gpu}
+
+\begin{table}[h]
+\centering
+\caption{GPU hardware specifications.}
+\label{tab:gpu_specs}
+\vspace{0.5em}
+\small
+\begin{tabular}{l l}
+\toprule
+\textbf{Property} & \textbf{Value} \\
+\midrule
+Device & NVIDIA GeForce RTX 3090 \\
+Compute capability & 8.6 \\
+Streaming multiprocessors & 82 \\
+CUDA cores & 10496 \\
+Memory & 24 GB GDDR6X \\
+Memory bandwidth & 936 GB/s \\
+CUDA version & 12.2 \\
+\midrule
+\multicolumn{2}{l}{\textit{Baseline GPU (Python baselines)}} \\
+\midrule
+Device & NVIDIA Tesla T4 \\
+Compute capability & 7.5 \\
+Streaming multiprocessors & 40 \\
+CUDA cores & 2560 \\
+Memory & 16 GB GDDR6 \\
+Memory bandwidth & 320 GB/s \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Core Kernel Implementation}
+\label{app:kernel}
+
+For reference, we include the complete CUDA kernel for the $\balpha$-update (the $\bbeta$-update is analogous):
+
+\begin{verbatim}
+__global__ void updateAlphaKernel(
+    const float* C, const float* log_nu,
+    const float* beta, float* alpha,
+    int n, int m, float eps)
+{
+    const int i = blockIdx.x;
+    if (i >= n) return;
+    const float inv_eps = 1.0f / eps;
+    const float* Ci = C + i * m;
+
+    // Pass 1: max for numerical stability
+    float thread_max = -FLT_MAX;
+    for (int j = threadIdx.x; j < m; j += blockDim.x) {
+        float val = (beta[j] - Ci[j]) * inv_eps + log_nu[j];
+        thread_max = fmaxf(thread_max, val);
+    }
+    float row_max = blockReduceMax(thread_max);
+
+    __shared__ float s_max;
+    if (threadIdx.x == 0) s_max = row_max;
+    __syncthreads();
+    row_max = s_max;
+
+    // Pass 2: stable sum
+    float thread_sum = 0.0f;
+    for (int j = threadIdx.x; j < m; j += blockDim.x) {
+        float val = (beta[j] - Ci[j]) * inv_eps + log_nu[j];
+        thread_sum += expf(val - row_max);
+    }
+    float row_sum = blockReduceSum(thread_sum);
+
+    if (threadIdx.x == 0) {
+        alpha[i] = -eps * (row_max
+                   + logf(fmaxf(row_sum, 1e-30f)));
+    }
+}
+\end{verbatim}

@@ -1,0 +1,38 @@
+# Build
+build/
+cmake-build-*/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Compiled
+*.o
+*.obj
+*.so
+*.dylib
+*.dll
+*.exe
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+
+# LaTeX build artifacts
+paper/*.aux
+paper/*.bbl
+paper/*.blg
+paper/*.log
+paper/*.out
+paper/*.fls
+paper/*.fdb_latexmk
+paper/*.synctex.gz
+paper/*.toc
+paper/sections/*.aux
+
+# Generated mock data (real data is tracked)
+experiments/data/mock_*

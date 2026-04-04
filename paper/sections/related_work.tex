@@ -1,0 +1,21 @@
+% ============================================================================
+% Section 2: Related Work
+% ============================================================================
+
+\section{Related Work}
+\label{sec:related_work}
+
+\paragraph{Entropic optimal transport.}
+The use of entropic regularization for optimal transport was popularized by \citet{cuturi2013sinkhorn}, who showed that adding a KL-divergence penalty transforms the linear program into a strictly convex problem solvable via Sinkhorn iterations~\citep{sinkhorn1967diagonal}. The comprehensive treatment by \citet{peyre2019computational} establishes the theoretical foundations, including convergence rates and approximation guarantees. \citet{altschuler2017near} provided near-linear time complexity bounds, showing that $\tilde{O}(n^2/\varepsilon^2)$ operations suffice for an $\varepsilon$-approximate solution.
+
+\paragraph{Numerical stabilization.}
+The standard Sinkhorn algorithm suffers from numerical overflow/underflow when $\varepsilon$ is small, as the Gibbs kernel entries $K_{ij} = e^{-C_{ij}/\varepsilon}$ span extreme ranges. \citet{schmitzer2019stabilized} proposed log-domain stabilization, and \citet{chizat2018scaling} extended this to unbalanced settings. While these stabilizations are well-understood theoretically, many GPU implementations still default to the numerically fragile standard-domain formulation.
+
+\paragraph{GPU-accelerated solvers.}
+Several GPU-based OT solvers exist in the literature. The POT library~\citep{flamary2021pot} provides a comprehensive Python API with optional GPU acceleration via CuPy. GeomLoss~\citep{feydy2019interpolating} and its KeOps backend~\citep{charlier2021kernel} offer GPU-accelerated Sinkhorn divergences with automatic differentiation, designed for integration with PyTorch. These framework-based approaches provide flexibility but carry overhead from the Python runtime, autograd engine, and generic GPU memory management.
+
+\paragraph{Algorithmic acceleration.}
+Beyond GPU parallelization, several algorithmic improvements reduce the computational cost of OT. Multiscale approaches~\citep{gerber2017multiscale, schmitzer2019stabilized} use coarse-to-fine strategies with sparse representations. Low-rank factorizations~\citep{scetbon2021low} approximate the transport plan with reduced-rank factors, achieving sub-quadratic complexity. Accelerated gradient methods~\citep{dvurechensky2018computational, lin2019efficient} provide improved convergence rates for the dual problem. These approaches are complementary to our GPU optimization strategy and could be combined in future work.
+
+\paragraph{Our position.}
+Our work occupies a distinct niche: a \emph{native CUDA} implementation that combines log-domain stability with warp-level GPU optimizations, targeting the common case of dense, moderate-sized ($n, m \leq 16384$) OT problems where the full cost matrix fits in GPU memory. Unlike framework-based approaches, our solver has zero Python overhead and minimal memory footprint, making it suitable for latency-sensitive applications and embedding in C++ pipelines.

@@ -1,0 +1,62 @@
+% ============================================================================
+% Section 3: Background
+% ============================================================================
+
+\section{Background}
+\label{sec:background}
+
+\subsection{Discrete Optimal Transport}
+
+Let $\bmu = (\mu_1, \ldots, \mu_n) \in \Sigma_n$ and $\bnu = (\nu_1, \ldots, \nu_m) \in \Sigma_m$ be discrete probability distributions on point sets $\{x_i\}_{i=1}^n$ and $\{y_j\}_{j=1}^m$, where $\Sigma_k = \{a \in \R_+^k : \sum_i a_i = 1\}$ denotes the probability simplex. Given a cost matrix $C \in \R_+^{n \times m}$ with $C_{ij} = c(x_i, y_j)$, the \emph{Kantorovich optimal transport problem} seeks the minimum-cost coupling:
+\begin{equation}
+    \label{eq:kantorovich}
+    \mathcal{T}_c(\bmu, \bnu) = \min_{\bpi \in \Pi(\bmu, \bnu)} \langle C, \bpi \rangle_F = \min_{\bpi \in \Pi(\bmu, \bnu)} \sum_{i,j} C_{ij} \pi_{ij},
+\end{equation}
+where the feasible set of couplings (transport plans) is:
+\begin{equation}
+    \label{eq:coupling_set}
+    \Pi(\bmu, \bnu) = \left\{ \bpi \in \R_+^{n \times m} \;\middle|\; \bpi \mathbf{1}_m = \bmu, \quad \bpi^\top \mathbf{1}_n = \bnu \right\}.
+\end{equation}
+This is a linear program in $nm$ variables with $n + m$ equality constraints. Exact solvers based on the network simplex algorithm have $O(n^3 \log n)$ complexity, which is prohibitive for large $n$~\citep{peyre2019computational}.
+
+\subsection{Entropic Regularization}
+
+Following \citet{cuturi2013sinkhorn}, we consider the \emph{entropically regularized} problem:
+\begin{equation}
+    \label{eq:regularized_ot}
+    \mathcal{T}_c^\eps(\bmu, \bnu) = \min_{\bpi \in \Pi(\bmu, \bnu)} \langle C, \bpi \rangle + \eps \, \KL(\bpi \| \bmu \otimes \bnu),
+\end{equation}
+where $\eps > 0$ is the regularization parameter and the KL divergence is:
+\begin{equation}
+    \KL(\bpi \| \bmu \otimes \bnu) = \sum_{i,j} \pi_{ij} \left( \log \frac{\pi_{ij}}{\mu_i \nu_j} - 1 \right) + 1.
+\end{equation}
+
+The addition of the strictly convex KL term ensures a unique minimizer $\bpi^\eps$. As $\eps \to 0^+$, we recover the solution to the original problem: $\bpi^\eps \to \bpi^*$~\citep{peyre2019computational}.
+
+\subsection{Structure of the Optimal Solution}
+
+Writing the KKT conditions with dual variables $\balpha \in \R^n$ (for row constraints) and $\bbeta \in \R^m$ (for column constraints), and setting $\partial \mathcal{L} / \partial \pi_{ij} = 0$, the optimal transport plan has the \emph{Gibbs kernel} structure:
+\begin{equation}
+    \label{eq:gibbs_structure}
+    \pi_{ij}^\eps = \mu_i \, \nu_j \, \exp\!\left(\frac{\alpha_i + \beta_j - C_{ij}}{\eps}\right).
+\end{equation}
+
+\subsection{The Sinkhorn Algorithm}
+
+Substituting Eq.~\eqref{eq:gibbs_structure} into the marginal constraints yields a fixed-point iteration. The \emph{Sinkhorn algorithm} alternates:
+\begin{align}
+    \label{eq:sinkhorn_alpha}
+    \alpha_i^{(k+1)} &= -\eps \log \sum_{j=1}^m \nu_j \exp\!\left(\frac{\beta_j^{(k)} - C_{ij}}{\eps}\right), \\
+    \label{eq:sinkhorn_beta}
+    \beta_j^{(k+1)} &= -\eps \log \sum_{i=1}^n \mu_i \exp\!\left(\frac{\alpha_i^{(k+1)} - C_{ij}}{\eps}\right),
+\end{align}
+starting from $\balpha^{(0)} = \mathbf{0}$, $\bbeta^{(0)} = \mathbf{0}$.
+
+\begin{theorem}[Linear convergence {\citep[Theorem~4.2]{peyre2019computational}}]
+\label{thm:convergence}
+The Sinkhorn iterates converge linearly:
+$\|\balpha^{(k)} - \balpha^*\|_\infty \leq \lambda^k \|\balpha^{(0)} - \balpha^*\|_\infty$,
+where $\lambda = e^{-2R/\eps}$ and $R = \max_{i,j} C_{ij} - \min_{i,j} C_{ij}$ is the cost range.
+\end{theorem}
+
+The contraction rate $\lambda$ approaches 1 as $\eps \to 0$, revealing the fundamental tension: smaller $\eps$ yields a better OT approximation but requires more iterations.

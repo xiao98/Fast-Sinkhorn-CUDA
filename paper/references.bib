@@ -1,0 +1,222 @@
+% ============================================================================
+% References for Fast Log-Domain Sinkhorn Paper
+% ============================================================================
+
+% --- Core Sinkhorn / Optimal Transport ---
+
+@inproceedings{cuturi2013sinkhorn,
+  title     = {Sinkhorn Distances: Lightspeed Computation of Optimal Transport},
+  author    = {Cuturi, Marco},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  volume    = {26},
+  year      = {2013}
+}
+
+@article{peyre2019computational,
+  title   = {Computational Optimal Transport: With Applications to Data Science},
+  author  = {Peyr{\'e}, Gabriel and Cuturi, Marco},
+  journal = {Foundations and Trends in Machine Learning},
+  volume  = {11},
+  number  = {5--6},
+  pages   = {355--607},
+  year    = {2019}
+}
+
+@article{schmitzer2019stabilized,
+  title   = {Stabilized Sparse Scaling Algorithms for Entropy Regularized Transport Problems},
+  author  = {Schmitzer, Bernhard},
+  journal = {SIAM Journal on Scientific Computing},
+  volume  = {41},
+  number  = {3},
+  pages   = {A1443--A1481},
+  year    = {2019}
+}
+
+@article{sinkhorn1967diagonal,
+  title   = {Diagonal Equivalence to Matrices with Prescribed Row and Column Sums},
+  author  = {Sinkhorn, Richard},
+  journal = {The American Mathematical Monthly},
+  volume  = {74},
+  number  = {4},
+  pages   = {402--405},
+  year    = {1967}
+}
+
+@book{villani2003topics,
+  title     = {Topics in Optimal Transportation},
+  author    = {Villani, C{\'e}dric},
+  year      = {2003},
+  publisher = {American Mathematical Society},
+  series    = {Graduate Studies in Mathematics},
+  volume    = {58}
+}
+
+@book{villani2009optimal,
+  title     = {Optimal Transport: Old and New},
+  author    = {Villani, C{\'e}dric},
+  year      = {2009},
+  publisher = {Springer},
+  series    = {Grundlehren der mathematischen Wissenschaften},
+  volume    = {338}
+}
+
+% --- GPU Implementations and Libraries ---
+
+@inproceedings{feydy2019interpolating,
+  title     = {Interpolating between Optimal Transport and {MMD} using {S}inkhorn Divergences},
+  author    = {Feydy, Jean and S{\'e}journ{\'e}, Thibault and Vialard, Fran{\c{c}}ois-Xavier and Amari, Shun-ichi and Trouve, Alain and Peyr{\'e}, Gabriel},
+  booktitle = {Proceedings of the 22nd International Conference on Artificial Intelligence and Statistics (AISTATS)},
+  pages     = {2681--2690},
+  year      = {2019}
+}
+
+@article{flamary2021pot,
+  title   = {{POT}: {P}ython Optimal Transport},
+  author  = {Flamary, R{\'e}mi and Courty, Nicolas and Gramfort, Alexandre and Alaya, Mokhtar Z. and Boisbunon, Aur{\'e}lie and Chambon, Stanislas and Chapel, Laetitia and Corenflos, Adrien and Fatras, Kilian and Fournier, Nemo and Gautheron, L{\'e}o and Gayraud, Nathalie T.H. and Janati, Hicham and Rakotomamonjy, Alain and Redko, Ievgen and Rolet, Antoine and Schutz, Antony and Seguy, Vivien and Sutherland, Danica J. and Tavenard, Romain and Tong, Alexander and Vayer, Titouan},
+  journal = {Journal of Machine Learning Research},
+  volume  = {22},
+  number  = {78},
+  pages   = {1--8},
+  year    = {2021}
+}
+
+@inproceedings{charlier2021kernel,
+  title     = {Kernel Operations on the {GPU}, with Autodiff, without Memory Overflows},
+  author    = {Charlier, Benjamin and Feydy, Jean and Glaun{\`e}s, Joan Alexis and Collin, Fran{\c{c}}ois-David and Durif, Ghislain},
+  booktitle = {Journal of Machine Learning Research},
+  volume    = {22},
+  number    = {74},
+  pages     = {1--6},
+  year      = {2021}
+}
+
+% --- Algorithmic Improvements ---
+
+@inproceedings{altschuler2017near,
+  title     = {Near-linear Time Approximation Algorithms for Optimal Transport via {S}inkhorn Iteration},
+  author    = {Altschuler, Jason and Weed, Jonathan and Rigollet, Philippe},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  volume    = {30},
+  year      = {2017}
+}
+
+@inproceedings{scetbon2021low,
+  title     = {Low-Rank {S}inkhorn Factorization},
+  author    = {Scetbon, Meyer and Cuturi, Marco and Peyr{\'e}, Gabriel},
+  booktitle = {Proceedings of the 38th International Conference on Machine Learning (ICML)},
+  pages     = {9344--9354},
+  year      = {2021}
+}
+
+@inproceedings{dvurechensky2018computational,
+  title     = {Computational Optimal Transport: Complexity by Accelerated Gradient Descent Is Better Than by {S}inkhorn's Algorithm},
+  author    = {Dvurechensky, Pavel and Gasnikov, Alexander and Kroshnin, Alexey},
+  booktitle = {Proceedings of the 35th International Conference on Machine Learning (ICML)},
+  pages     = {1367--1376},
+  year      = {2018}
+}
+
+@inproceedings{lin2019efficient,
+  title     = {On Efficient Optimal Transport: An Analysis of Greedy and Accelerated Mirror Descent Algorithms},
+  author    = {Lin, Tianyi and Ho, Nhat and Jordan, Michael I.},
+  booktitle = {Proceedings of the 36th International Conference on Machine Learning (ICML)},
+  pages     = {3982--3991},
+  year      = {2019}
+}
+
+% --- Applications ---
+
+@inproceedings{arjovsky2017wasserstein,
+  title     = {Wasserstein Generative Adversarial Networks},
+  author    = {Arjovsky, Martin and Chintala, Soumith and Bottou, L{\'e}on},
+  booktitle = {Proceedings of the 34th International Conference on Machine Learning (ICML)},
+  pages     = {214--223},
+  year      = {2017}
+}
+
+@inproceedings{courty2017optimal,
+  title     = {Optimal Transport for Domain Adaptation},
+  author    = {Courty, Nicolas and Flamary, R{\'e}mi and Tuia, Devis and Rakotomamonjy, Alain},
+  booktitle = {IEEE Transactions on Pattern Analysis and Machine Intelligence},
+  volume    = {39},
+  number    = {9},
+  pages     = {1853--1865},
+  year      = {2017}
+}
+
+@inproceedings{kusner2015word,
+  title     = {From Word Embeddings To Document Distances},
+  author    = {Kusner, Matt J. and Sun, Yu and Kolkin, Nicholas I. and Weinberger, Kilian Q.},
+  booktitle = {Proceedings of the 32nd International Conference on Machine Learning (ICML)},
+  pages     = {957--966},
+  year      = {2015}
+}
+
+@article{solomon2015convolutional,
+  title   = {Convolutional {W}asserstein Distances: Efficient Optimal Transport on Geometric Domains},
+  author  = {Solomon, Justin and de Goes, Fernando and Peyr{\'e}, Gabriel and Cuturi, Marco and Butscher, Adrian and Nguyen, Andy and Du, Tao and Guibas, Leonidas},
+  journal = {ACM Transactions on Graphics (SIGGRAPH)},
+  volume  = {34},
+  number  = {4},
+  pages   = {66:1--66:11},
+  year    = {2015}
+}
+
+@inproceedings{bonneel2015sliced,
+  title     = {Sliced and {R}adon {W}asserstein Barycenters of Measures},
+  author    = {Bonneel, Nicolas and Rabin, Julien and Peyr{\'e}, Gabriel and Pfister, Hanspeter},
+  booktitle = {Journal of Mathematical Imaging and Vision},
+  volume    = {51},
+  number    = {1},
+  pages     = {22--45},
+  year      = {2015}
+}
+
+% --- GPU Computing ---
+
+@article{nvidia2020cuda,
+  title  = {{CUDA} {C}++ Programming Guide},
+  author = {{NVIDIA Corporation}},
+  year   = {2020},
+  note   = {\url{https://docs.nvidia.com/cuda/cuda-c-programming-guide/}}
+}
+
+@inproceedings{harris2007parallel,
+  title     = {Optimizing Parallel Reduction in {CUDA}},
+  author    = {Harris, Mark},
+  booktitle = {NVIDIA Developer Technology},
+  year      = {2007}
+}
+
+% --- Multiscale / Sparse Methods ---
+
+@inproceedings{gerber2017multiscale,
+  title     = {Multiscale Strategies for Computing Optimal Transport},
+  author    = {Gerber, Samuel and Maggioni, Mauro},
+  booktitle = {Journal of Machine Learning Research},
+  volume    = {18},
+  number    = {72},
+  pages     = {1--32},
+  year      = {2017}
+}
+
+% --- Numerical Stability ---
+
+@article{chizat2018scaling,
+  title   = {Scaling Algorithms for Unbalanced Optimal Transport Problems},
+  author  = {Chizat, Lena{\"i}c and Peyr{\'e}, Gabriel and Schmitzer, Bernhard and Vialard, Fran{\c{c}}ois-Xavier},
+  journal = {Mathematics of Computation},
+  volume  = {87},
+  number  = {314},
+  pages   = {2563--2609},
+  year    = {2018}
+}
+
+@article{franklin1989scaling,
+  title   = {Scaling of Matrices to Achieve Specified Row and Column Sums},
+  author  = {Franklin, Joel and Lorenz, Jens},
+  journal = {Numer. Math.},
+  volume  = {53},
+  pages   = {139--148},
+  year    = {1989}
+}

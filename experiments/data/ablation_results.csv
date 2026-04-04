@@ -1,0 +1,13 @@
+config,n,epsilon,time_ms_mean,time_ms_std,iterations,converged,notes
+full_system,2048,0.01,14.775,0.45,180,1,
+shared_mem_only,2048,0.01,28.481,0.833,180,1,
+standard_domain,2048,0.01,16.911,0.495,200,1,
+block_size_64,2048,0.01,21.052,0.652,180,1,
+block_size_128,2048,0.01,16.743,0.517,180,1,
+block_size_256,2048,0.01,14.485,0.45,180,1,
+block_size_512,2048,0.01,16.802,0.486,180,1,
+check_interval_1,2048,0.01,24.793,0.742,180,1,
+check_interval_5,2048,0.01,16.782,0.504,180,1,
+check_interval_10,2048,0.01,15.167,0.45,180,1,
+check_interval_20,2048,0.01,14.27,0.436,180,1,
+check_interval_50,2048,0.01,14.199,0.427,185,1,
